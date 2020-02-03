@@ -1,5 +1,8 @@
 var registeredUsers = []; // this array stores valid usernames until the next pageload
-
+$(document).ready(function() {
+    //only when when the page content has finished loading, to do the followings
+    $("registeredBtn").on("click", validateForm);
+});
 function validateForm(e){
     e.preventDefault(); // stop the submit button from refreshing the page
     console.log('validating ....');
