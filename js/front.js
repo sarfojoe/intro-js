@@ -1,146 +1,201 @@
-$(function() {
+function getPageName() {
   var pathname = window.location.pathname;
-  $(document).on("view:HomePage", function() {
-    console.log("view on HomePage tracked");
-  });
-  if (pathname === "/index.html" || pathname === "/") {
-    $(document).trigger("view:HomePage");
+  if (pathname.indexOf("index.html") > -1) {
+    return "HomePage";
+  } else if (pathname.indexOf("detail.html") > -1) {
+    return "ProductPage";
+  } else if (pathname.indexOf("checkout4.html") > -1) {
+    return "Checkout4";
   }
+}
 
-  if (pathname === "/detail.html" || pathname === "/") {
-    $(document).trigger("view:ProductPage");
-  }
-  if (pathname === "/basket.html" || pathname === "/") {
-    $(document).trigger("view:Basket");
-  }
-  if (pathname === "/checkout1.html" || pathname === "/") {
-    $(document).trigger("view:Checkout");
-  }
-  if (pathname === "/checkout2.html" || pathname === "/") {
-    $(document).trigger("view:Delivery");
-  }
-  if (pathname === "/checkout3.html" || pathname === "/") {
-    $(document).trigger("view:Payment");
-  }
+function getProductInfo() {
+  return {
+    productName: $("#productMain h1.text-center").text(),
+    productPrice: $("#productMain .price").text()
+  };
+}
 
-  //rewrite the lines 26 to 39 for the page to work well
-  $(document).trigger("conversation", {
-    totalPrice: document.getElementById("totalPrice").innerText,
-    purchaseProducts: [
-      {
-        productName: "",
-        productPrice: 12
-      },
-      {
-        productName: "",
-        productPrice: 12
-      }
-    ]
-  });
+function getCartInfo() {
+  var productInfoEls = $("#checkout table tbody tr");
+  var result = {};
 
-  function getProductInfo() {
-    return {
-      productName: $("#productMain h1.text-center").text(),
-      productPrice: $("#productMain.price").text()
-    };
-  }
+  result.totalPurchase = $("#checkout table tfoot th")
+    .eq(1)
+    .text();
+  result.userAgent = navigator.userAgent;
+  result.productList = [];
 
-  function getCartSummary() {
-    var_products = [];
-
-    document.querySelectorAll("tr").forEach(function(product) {
-      var _name = product.childlodes()[0];
-      _products.push(product);
+  $.each(productInfoEls, function(index, el) {
+    result.productList.push({
+      productName: $(el)
+        .children()
+        .eq(1)
+        .text(),
+      quantity: $(el)
+        .children()
+        .eq(2)
+        .text(),
+      productPrice: $(el)
+        .children()
+        .eq(3)
+        .text(),
+      discount: $(el)
+        .children()
+        .eq(4)
+        .text(),
+      totalPrice: $(el)
+        .children()
+        .eq(5)
+        .text()
     });
+  });
 
-    return {
-      totalPrice: 100,
-      products: _products
-    };
+  return result;
+}
+
+function getParam() {
+  var pageName = getPageName();
+  var result = null;
+
+  if (pageName === "ProductPage") {
+    result = getProductInfo();
+    return result;
+  } else if (pageName === "Checkout4") {
+    result = getCartInfo();
+    return result;
   }
 
-  function getParam() {
-    var pageName = getPageName();
-    var results = null;
+  return result;
+}
+
+function triggerPageEvent() {
+  var pageName = getPageName();
+  var params = getParam();
+
+  if (pageName === "Checkout4") {
+    // specific event listener for checkout4 Page
+    $("#checkout button").on("click", function() {
+      $(document).trigger("conversion", params);
+    });
+  } else {
+    $(document).trigger("view:" + pageName, params);
   }
+}
 
-  $(".shop-detail-carousel").owlCarousel({
-    items: 1,
-    thumbs: true,
-    nav: false,
-    dots: false,
-    loop: true,
-    autoplay: true,
-    thumbsPrerendered: true
+$(document).on("view:ProductPage", function(event, params) {
+  console.log("The first parameter that I received is: ");
+  console.log(event);
+
+  console.log("The second parameter that I received is: ");
+  console.log(params);
+
+  // ga('send', 'event', 'ProductPage', 'View', params.productName, {
+  //     nonInteraction: true
+  // });
+});
+
+triggerPageEvent();
+function getCartSummary() {
+  var_products = [];
+
+  document.querySelectorAll("tr").forEach(function(product) {
+    var _name = product.childlodes()[0];
+    _products.push(product);
   });
 
-  $("#main-slider").owlCarousel({
-    items: 1,
-    nav: false,
-    dots: true,
-    autoplay: true,
-    autoplayHoverPause: true,
-    dotsSpeed: 400
-  });
+  return {
+    totalPrice: 100,
+    products: _products
+  };
+}
+function triggerPageEvent() {
+  var pageName = getPageName();
+  var getparams = getParam();
+  $(document).trigger("view" + pageName, params);
+}
 
-  $("#get-inspired").owlCarousel({
-    items: 1,
-    nav: false,
-    dots: true,
-    autoplay: true,
-    autoplayHoverPause: true,
-    dotsSpeed: 400
-  });
+function getParam() {
+  var pageName = getPageName();
+  var results = null;
+}
 
-  $(".product-slider").owlCarousel({
-    items: 1,
-    dots: true,
-    nav: false,
-    responsive: {
-      480: {
-        items: 1
-      },
-      765: {
-        items: 2
-      },
-      991: {
-        items: 3
-      },
-      1200: {
-        items: 5
-      }
+$(".shop-detail-carousel").owlCarousel({
+  items: 1,
+  thumbs: true,
+  nav: false,
+  dots: false,
+  loop: true,
+  autoplay: true,
+  thumbsPrerendered: true
+});
+
+$("#main-slider").owlCarousel({
+  items: 1,
+  nav: false,
+  dots: true,
+  autoplay: true,
+  autoplayHoverPause: true,
+  dotsSpeed: 400
+});
+
+$("#get-inspired").owlCarousel({
+  items: 1,
+  nav: false,
+  dots: true,
+  autoplay: true,
+  autoplayHoverPause: true,
+  dotsSpeed: 400
+});
+
+$(".product-slider").owlCarousel({
+  items: 1,
+  dots: true,
+  nav: false,
+  responsive: {
+    480: {
+      items: 1
+    },
+    765: {
+      items: 2
+    },
+    991: {
+      items: 3
+    },
+    1200: {
+      items: 5
     }
-  });
+  }
+});
 
-  // productDetailGallery(4000);
-  utils();
+// productDetailGallery(4000);
+utils();
 
-  // ------------------------------------------------------ //
-  // For demo purposes, can be deleted
-  // ------------------------------------------------------ //
+// ------------------------------------------------------ //
+// For demo purposes, can be deleted
+// ------------------------------------------------------ //
 
-  var stylesheet = $("link#theme-stylesheet");
-  $("<link id='new-stylesheet' rel='stylesheet'>").insertAfter(stylesheet);
-  var alternateColour = $("link#new-stylesheet");
+var stylesheet = $("link#theme-stylesheet");
+$("<link id='new-stylesheet' rel='stylesheet'>").insertAfter(stylesheet);
+var alternateColour = $("link#new-stylesheet");
 
-  if ($.cookie("theme_csspath")) {
-    alternateColour.attr("href", $.cookie("theme_csspath"));
+if ($.cookie("theme_csspath")) {
+  alternateColour.attr("href", $.cookie("theme_csspath"));
+}
+
+$("#colour").change(function() {
+  if ($(this).val() !== "") {
+    var theme_csspath = "css/style." + $(this).val() + ".css";
+
+    alternateColour.attr("href", theme_csspath);
+
+    $.cookie("theme_csspath", theme_csspath, {
+      expires: 365,
+      path: document.URL.substr(0, document.URL.lastIndexOf("/"))
+    });
   }
 
-  $("#colour").change(function() {
-    if ($(this).val() !== "") {
-      var theme_csspath = "css/style." + $(this).val() + ".css";
-
-      alternateColour.attr("href", theme_csspath);
-
-      $.cookie("theme_csspath", theme_csspath, {
-        expires: 365,
-        path: document.URL.substr(0, document.URL.lastIndexOf("/"))
-      });
-    }
-
-    return false;
-  });
+  return false;
 });
 
 $(window).on("load", function() {
